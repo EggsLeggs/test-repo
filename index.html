@@ -183,7 +183,13 @@
         const stats = document.getElementById('stats');
 
         // Load todos from localStorage
-        let todos = JSON.parse(localStorage.getItem('todos')) || [];
+        let todos = [];
+        try {
+            todos = JSON.parse(localStorage.getItem('todos')) || [];
+        } catch (e) {
+            console.error('Failed to load todos from localStorage:', e);
+            todos = [];
+        }
 
         // Render todos
         function renderTodos() {
@@ -198,16 +204,17 @@
             todos.forEach((todo, index) => {
                 const li = document.createElement('li');
                 li.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+                li.dataset.index = index;
                 
                 li.innerHTML = `
                     <input 
                         type="checkbox" 
                         class="checkbox" 
                         ${todo.completed ? 'checked' : ''}
-                        onchange="toggleTodo(${index})"
+                        data-index="${index}"
                     >
                     <span class="todo-text">${escapeHtml(todo.text)}</span>
-                    <button class="delete-btn" onclick="deleteTodo(${index})">Delete</button>
+                    <button class="delete-btn" data-index="${index}">Delete</button>
                 `;
                 
                 todoList.appendChild(li);
@@ -277,6 +284,21 @@
         todoInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 addTodo();
+            }
+        });
+
+        // Event delegation for todo list
+        todoList.addEventListener('change', (e) => {
+            if (e.target.classList.contains('checkbox')) {
+                const index = parseInt(e.target.dataset.index);
+                toggleTodo(index);
+            }
+        });
+
+        todoList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-btn')) {
+                const index = parseInt(e.target.dataset.index);
+                deleteTodo(index);
             }
         });
 
